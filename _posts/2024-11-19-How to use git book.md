@@ -115,3 +115,62 @@ public class OutlierDetector {
         System.out.println("Outliers: " + Arrays.toString(outliers));
     }
 }
+
+
+
+
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.Queue;
+
+public class OutlierDetection {
+
+    // 이동 중앙값을 계산하는 함수
+    public static double[] movingMedian(double[] data, int windowSize) {
+        double[] result = new double[data.length];
+        int halfWindow = windowSize / 2;
+        
+        for (int i = 0; i < data.length; i++) {
+            int start = Math.max(i - halfWindow, 0);
+            int end = Math.min(i + halfWindow, data.length - 1);
+            
+            // 창 내의 값들을 추출하여 정렬
+            double[] window = Arrays.copyOfRange(data, start, end + 1);
+            Arrays.sort(window);
+            
+            // 중앙값 계산
+            int mid = window.length / 2;
+            result[i] = window[mid];
+        }
+        
+        return result;
+    }
+
+    // 이상값을 결정하는 함수
+    public static boolean[] detectOutliers(double[] data, int windowSize, double threshold) {
+        double[] movingMedians = movingMedian(data, windowSize);
+        boolean[] outliers = new boolean[data.length];
+        
+        for (int i = 0; i < data.length; i++) {
+            // 중앙값에서 너무 멀리 떨어져 있으면 이상값으로 간주
+            if (Math.abs(data[i] - movingMedians[i]) > threshold) {
+                outliers[i] = true;
+            } else {
+                outliers[i] = false;
+            }
+        }
+        
+        return outliers;
+    }
+
+    public static void main(String[] args) {
+        double[] data = {1, 2, 3, 4, 100, 6, 7, 8, 9, 10};
+        int windowSize = 3; // 이동 평균을 계산할 창 크기
+        double threshold = 15; // 중앙값에서 너무 먼 값은 이상값으로 간주
+
+        boolean[] outliers = detectOutliers(data, windowSize, threshold);
+
+        System.out.println("Data: " + Arrays.toString(data));
+        System.out.println("Outliers: " + Arrays.toString(outliers));
+    }
+}
