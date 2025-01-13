@@ -316,4 +316,93 @@ public class Linspace {
     }
 }
 
+--------
+import java.util.Arrays;
+
+public class SplineFit {
+
+    // 스플라인 보간 함수
+    public static double[] splinefit(double[] x, double[] y, double[] xi) {
+        int n = x.length - 1; // 구간의 개수
+        double[] h = new double[n]; // 구간 길이
+        double[] alpha = new double[n]; // 알파 값
+
+        // h[i] 계산 (x 간격)
+        for (int i = 0; i < n; i++) {
+            h[i] = x[i + 1] - x[i];
+        }
+
+        // alpha[i] 계산
+        for (int i = 1; i < n; i++) {
+            alpha[i] = (3 / h[i]) * (y[i + 1] - y[i]) - (3 / h[i - 1]) * (y[i] - y[i - 1]);
+        }
+
+        // 삼천행렬 계산
+        double[] l = new double[n + 1];
+        double[] mu = new double[n];
+        double[] z = new double[n + 1];
+
+        l[0] = 1.0;
+        z[0] = 0.0;
+        mu[0] = 0.0;
+
+        // 순방향 과정
+        for (int i = 1; i < n; i++) {
+            l[i] = 2 * (x[i + 1] - x[i - 1]) - h[i - 1] * mu[i - 1];
+            mu[i] = h[i] / l[i];
+            z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i];
+        }
+
+        l[n] = 1.0;
+        z[n] = 0.0;
+
+        // 계수 초기화
+        double[] c = new double[n + 1];
+        double[] b = new double[n];
+        double[] d = new double[n];
+
+        // 역방향 과정
+        for (int j = n - 1; j >= 0; j--) {
+            c[j] = z[j] - mu[j] * c[j + 1];
+            b[j] = (y[j + 1] - y[j]) / h[j] - h[j] * (c[j + 1] + 2 * c[j]) / 3;
+            d[j] = (c[j + 1] - c[j]) / (3 * h[j]);
+        }
+
+        // 보간 결과 계산
+        double[] yi = new double[xi.length];
+        for (int k = 0; k < xi.length; k++) {
+            double xk = xi[k];
+            int interval = findInterval(x, xk);
+            double diff = xk - x[interval];
+            yi[k] = y[interval] + b[interval] * diff + c[interval] * diff * diff + d[interval] * diff * diff * diff;
+        }
+
+        return yi;
+    }
+
+    // xi가 속한 구간 찾기
+    private static int findInterval(double[] x, double value) {
+        for (int i = 0; i < x.length - 1; i++) {
+            if (value >= x[i] && value <= x[i + 1]) {
+                return i;
+            }
+        }
+        return x.length - 2; // 마지막 구간
+    }
+
+    public static void main(String[] args) {
+        // 데이터 포인트 (x, y)
+        double[] x = { 0.0, 1.0, 2.0, 3.0, 4.0 };
+        double[] y = { 0.0, 0.8, 0.9, 0.1, -0.8 };
+
+        // 보간할 지점
+        double[] xi = { 0.5, 1.5, 2.5, 3.5 };
+
+        // 스플라인 보간
+        double[] yi = splinefit(x, y, xi);
+
+        // 결과 출력
+        System.out.println("Interpolated values: " + Arrays.toString(yi));
+    }
+}
 
