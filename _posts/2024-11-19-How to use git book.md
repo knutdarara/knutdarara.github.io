@@ -174,3 +174,112 @@ public class OutlierDetection {
         System.out.println("Outliers: " + Arrays.toString(outliers));
     }
 }
+
+
+
+
+-----------------
+import java.util.*;
+
+class Baermap {
+    double value; // Baermap의 값
+    int index;    // 해당 값의 인덱스
+
+    public Baermap(double value, int index) {
+        this.value = value;
+        this.index = index;
+    }
+}
+
+public class MovMedianOutlierDetection {
+
+    public static List<Boolean> isoutlier(List<Baermap> asdf, int windowSize) {
+        List<Boolean> outliers = new ArrayList<>();
+        int n = asdf.size();
+
+        // 이동 중앙값 기반 이상치 탐지
+        for (int i = 0; i < n; i++) {
+            // 윈도우 범위 계산
+            int start = Math.max(0, i - windowSize / 2);
+            int end = Math.min(n, i + windowSize / 2 + 1);
+
+            // 윈도우 값 추출
+            List<Double> windowValues = new ArrayList<>();
+            for (int j = start; j < end; j++) {
+                windowValues.add(asdf.get(j).value);
+            }
+
+            // 중앙값 계산
+            double median = computeMedian(windowValues);
+
+            // 기준값 계산: 1.5 * IQR
+            double iqr = computeIQR(windowValues);
+            double threshold = 1.5 * iqr;
+
+            // 현재 값과 중앙값의 차이 확인
+            double currentValue = asdf.get(i).value;
+            boolean isOutlier = Math.abs(currentValue - median) > threshold;
+
+            // 결과 저장
+            outliers.add(isOutlier);
+        }
+
+        return outliers;
+    }
+
+    // 중앙값 계산 함수
+    private static double computeMedian(List<Double> values) {
+        Collections.sort(values);
+        int size = values.size();
+        if (size % 2 == 0) {
+            return (values.get(size / 2 - 1) + values.get(size / 2)) / 2.0;
+        } else {
+            return values.get(size / 2);
+        }
+    }
+
+    // IQR 계산 함수
+    private static double computeIQR(List<Double> values) {
+        Collections.sort(values);
+        double q1 = getPercentile(values, 25);
+        double q3 = getPercentile(values, 75);
+        return q3 - q1;
+    }
+
+    // 퍼센타일 계산 함수
+    private static double getPercentile(List<Double> values, double percentile) {
+        int n = values.size();
+        double rank = (percentile / 100.0) * (n - 1);
+        int lower = (int) Math.floor(rank);
+        int upper = (int) Math.ceil(rank);
+        if (lower == upper) {
+            return values.get(lower);
+        }
+        return values.get(lower) + (values.get(upper) - values.get(lower)) * (rank - lower);
+    }
+
+    public static void main(String[] args) {
+        // 샘플 데이터
+        List<Baermap> data = Arrays.asList(
+            new Baermap(10.0, 0),
+            new Baermap(12.0, 1),
+            new Baermap(14.0, 2),
+            new Baermap(100.0, 3), // 이상치
+            new Baermap(16.0, 4),
+            new Baermap(18.0, 5),
+            new Baermap(20.0, 6)
+        );
+
+        // 윈도우 크기
+        int windowSize = 3;
+
+        // 이상치 탐지
+        List<Boolean> outliers = isoutlier(data, windowSize);
+
+        // 결과 출력
+        for (int i = 0; i < outliers.size(); i++) {
+            System.out.println("Index " + data.get(i).index + " (Value: " + data.get(i).value + "): " + (outliers.get(i) ? "Outlier" : "Normal"));
+        }
+    }
+}
+
