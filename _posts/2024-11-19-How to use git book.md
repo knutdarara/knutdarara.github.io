@@ -404,5 +404,51 @@ public class SplineFit {
         // 결과 출력
         System.out.println("Interpolated values: " + Arrays.toString(yi));
     }
+}------
+
+
+public class Ppval {
+
+    // Piecewise polynomial 평가 함수
+    public static double ppval(double[][] coefficients, double[] breaks, double xi) {
+        int interval = findInterval(breaks, xi); // xi가 속한 구간 찾기
+        double diff = xi - breaks[interval];    // xi와 구간 시작점 차이
+
+        // 다항식 평가 (계수는 [a3, a2, a1, a0] 형태로 저장)
+        double[] poly = coefficients[interval];
+        return poly[0] * Math.pow(diff, 3) + poly[1] * Math.pow(diff, 2) + poly[2] * diff + poly[3];
+    }
+
+    // 특정 값이 속한 구간 찾기
+    private static int findInterval(double[] breaks, double xi) {
+        for (int i = 0; i < breaks.length - 1; i++) {
+            if (xi >= breaks[i] && xi <= breaks[i + 1]) {
+                return i;
+            }
+        }
+        return breaks.length - 2; // 마지막 구간에 속함
+    }
+
+    public static void main(String[] args) {
+        // 스플라인 계수 (각 구간별 다항식: [a3, a2, a1, a0])
+        double[][] coefficients = {
+            { 0, 0, 1, 0 }, // 구간 1 (x^1)
+            { 0, 0, -1, 2 }, // 구간 2 (-x^1 + 2)
+            { 0, 1, 0, 1 }  // 구간 3 (x^2 + 1)
+        };
+
+        // 구간 정보 (breakpoints)
+        double[] breaks = { 0, 1, 2, 3 };
+
+        // 평가할 값
+        double xi = 2.5;
+
+        // ppval 실행
+        double result = ppval(coefficients, breaks, xi);
+
+        // 결과 출력
+        System.out.println("Value at xi = " + xi + ": " + result);
+    }
 }
+
 
