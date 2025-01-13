@@ -283,3 +283,37 @@ public class MovMedianOutlierDetection {
     }
 }
 
+
+--------
+import java.util.Arrays;
+
+public class Linspace {
+
+    public static double[] linspace(double start, double end, int numPoints) {
+        // numPoints가 1일 경우 시작값만 반환
+        if (numPoints <= 1) {
+            return new double[]{start};
+        }
+
+        double[] result = new double[numPoints];
+        double step = (end - start) / (numPoints - 1); // 각 값 사이의 간격 계산
+
+        for (int i = 0; i < numPoints; i++) {
+            result[i] = start + i * step; // 등간격 값 계산
+        }
+
+        return result;
+    }
+
+    public static void main(String[] args) {
+        // 샘플 실행
+        double start = 0.0;
+        double end = 10.0;
+        int numPoints = 5;
+
+        double[] result = linspace(start, end, numPoints);
+        System.out.println("Linspace result: " + Arrays.toString(result));
+    }
+}
+
+
