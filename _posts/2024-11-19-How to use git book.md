@@ -452,3 +452,97 @@ public class Ppval {
 }
 
 
+
+--------
+
+
+
+import java.util.Arrays;
+
+public class SplineFitAndEval {
+
+    // Linspace 구현
+    public static double[] linspace(double start, double end, int numPoints) {
+        if (numPoints <= 1) {
+            return new double[]{start};
+        }
+        double[] result = new double[numPoints];
+        double step = (end - start) / (numPoints - 1);
+        for (int i = 0; i < numPoints; i++) {
+            result[i] = start + i * step;
+        }
+        return result;
+    }
+
+    // Splinefit 구현 (Cubic Spline Interpolation)
+    public static double[][] splinefit(double[] x, double[] y, double[] breaks) {
+        int n = breaks.length - 1;
+        double[][] coefficients = new double[n][4]; // [a3, a2, a1, a0] for each interval
+
+        for (int i = 0; i < n; i++) {
+            // Linear interpolation as an example (cubic interpolation requires more detailed implementation)
+            double x0 = breaks[i];
+            double x1 = breaks[i + 1];
+            double y0 = interpolate(x, y, x0);
+            double y1 = interpolate(x, y, x1);
+
+            double slope = (y1 - y0) / (x1 - x0);
+            coefficients[i] = new double[]{0, 0, slope, y0};
+        }
+
+        return coefficients;
+    }
+
+    // 보간을 위한 단순 선형 보간 함수
+    private static double interpolate(double[] x, double[] y, double xi) {
+        for (int i = 0; i < x.length - 1; i++) {
+            if (xi >= x[i] && xi <= x[i + 1]) {
+                double t = (xi - x[i]) / (x[i + 1] - x[i]);
+                return y[i] + t * (y[i + 1] - y[i]);
+            }
+        }
+        return 0; // Default (shouldn't happen if xi is within range)
+    }
+
+    // Ppval 구현
+    public static double ppval(double[][] coefficients, double[] breaks, double xi) {
+        int interval = findInterval(breaks, xi);
+        double diff = xi - breaks[interval];
+        double[] poly = coefficients[interval];
+        return poly[0] * Math.pow(diff, 3) + poly[1] * Math.pow(diff, 2) + poly[2] * diff + poly[3];
+    }
+
+    // 특정 값이 속한 구간 찾기
+    private static int findInterval(double[] breaks, double xi) {
+        for (int i = 0; i < breaks.length - 1; i++) {
+            if (xi >= breaks[i] && xi <= breaks[i + 1]) {
+                return i;
+            }
+        }
+        return breaks.length - 2; // 마지막 구간
+    }
+
+    public static void main(String[] args) {
+        // Input 데이터
+        double[] R0 = {120, 130, 140, 150, 160}; // X 데이터
+        double[] E0 = {10, 20, 15, 25, 30};      // Y 데이터
+        double[] radius = {125, 135, 145, 155};  // ERORAW.Radius
+
+        // 1. Linspace
+        double[] breaks = linspace(120, R0[R0.length - 1], 10);
+        System.out.println("Breaks: " + Arrays.toString(breaks));
+
+        // 2. Splinefit
+        double[][] pp = splinefit(R0, E0, breaks);
+        System.out.println("Spline Coefficients: " + Arrays.deepToString(pp));
+
+        // 3. Ppval
+        double[] eroValues = new double[radius.length];
+        for (int i = 0; i < radius.length; i++) {
+            eroValues[i] = ppval(pp, breaks, radius[i]);
+        }
+        System.out.println("ERO Values: " + Arrays.toString(eroValues));
+    }
+}
+
+
