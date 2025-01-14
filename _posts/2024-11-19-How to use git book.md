@@ -222,4 +222,123 @@ public class SplineFitConverter {
         System.out.println("Spline Values (yy): " + Arrays.toString(yy));
     }
 }
+ㅡㅡㅡㅡㅡㅡㅡ
+
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MatlabToJavaSpline {
+
+    public static class PiecewisePolynomial {
+        double[][] coefficients; // 구간별 계수 (a, b, c, d)
+        double[] breaks; // 각 구간의 경계점
+
+        public PiecewisePolynomial(double[][] coefficients, double[] breaks) {
+            this.coefficients = coefficients;
+            this.breaks = breaks;
+        }
+    }
+
+    // MATLAB의 splinefit()에 해당하는 함수
+    public static PiecewisePolynomial splineFit(double[] x, double[] y, int pieces) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x와 y의 길이가 같아야 합니다.");
+        }
+
+        // 구간 나누기
+        double[] breaks = linspace(x[0], x[x.length - 1], pieces + 1);
+        int numSegments = breaks.length - 1;
+        double[][] coefficients = new double[numSegments][4]; // cubic spline 계수
+
+        // 각 구간별 스플라인 계산
+        for (int i = 0; i < numSegments; i++) {
+            double x0 = breaks[i];
+            double x1 = breaks[i + 1];
+            double y0 = interpolate(x, y, x0);
+            double y1 = interpolate(x, y, x1);
+
+            // 선형 스플라인 계수 (a + b*x)
+            double a = y0;
+            double b = (y1 - y0) / (x1 - x0);
+
+            // cubic 스플라인의 고차항(c, d)은 0으로 설정
+            coefficients[i][0] = a; // a
+            coefficients[i][1] = b; // b
+            coefficients[i][2] = 0; // c
+            coefficients[i][3] = 0; // d
+        }
+
+        return new PiecewisePolynomial(coefficients, breaks);
+    }
+
+    // MATLAB의 fnval()에 해당하는 함수
+    public static double[] evaluateSpline(PiecewisePolynomial pp, double[] xx) {
+        double[] yy = new double[xx.length];
+
+        for (int i = 0; i < xx.length; i++) {
+            double x = xx[i];
+            for (int j = 0; j < pp.breaks.length - 1; j++) {
+                if (x >= pp.breaks[j] && x <= pp.breaks[j + 1]) {
+                    double a = pp.coefficients[j][0];
+                    double b = pp.coefficients[j][1];
+                    double c = pp.coefficients[j][2];
+                    double d = pp.coefficients[j][3];
+                    double t = x - pp.breaks[j];
+
+                    yy[i] = a + b * t + c * t * t + d * t * t * t;
+                    break;
+                }
+            }
+        }
+
+        return yy;
+    }
+
+    // 선형 보간 함수
+    private static double interpolate(double[] x, double[] y, double xi) {
+        for (int i = 0; i < x.length - 1; i++) {
+            if (xi >= x[i] && xi <= x[i + 1]) {
+                double t = (xi - x[i]) / (x[i + 1] - x[i]);
+                return y[i] + t * (y[i + 1] - y[i]);
+            }
+        }
+        throw new IllegalArgumentException("xi가 x 범위를 벗어났습니다.");
+    }
+
+    // MATLAB의 linspace() 구현
+    private static double[] linspace(double start, double end, int numPoints) {
+        double[] result = new double[numPoints];
+        double step = (end - start) / (numPoints - 1);
+        for (int i = 0; i < numPoints; i++) {
+            result[i] = start + i * step;
+        }
+        return result;
+    }
+
+    public static void main(String[] args) {
+        // 입력 데이터
+        double[] x = {1, 2, 3, 4, 5, 6};
+        double[] y = {2, 1, 2, 1, 2, 3};
+        int pieces = 3;
+
+        // 스플라인 피팅
+        PiecewisePolynomial pp = splineFit(x, y, pieces);
+
+        // 스플라인 평가
+        double[] xx = linspace(1, 6, 100);
+        double[] yy = evaluateSpline(pp, xx);
+
+        // 결과 출력
+        System.out.println("구간별 계수:");
+        for (double[] coeff : pp.coefficients) {
+            System.out.println(java.util.Arrays.toString(coeff));
+        }
+
+        System.out.println("스플라인 평가 결과:");
+        for (int i = 0; i < xx.length; i++) {
+            System.out.printf("x=%.2f, y=%.2f%n", xx[i], yy[i]);
+        }
+    }
+}
 
