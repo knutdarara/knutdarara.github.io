@@ -128,3 +128,98 @@ public class SplineFit {
         System.out.println("ERO Values: " + Arrays.toString(eroValues));
     }
 }
+
+import java.util.Arrays;
+
+public class SplineFitConverter {
+
+    // Spline fitting logic
+    public static double[] splineFit(double[] x, double[] y, int numPieces) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x and y must have the same length");
+        }
+
+        // Compute breaks (knots)
+        double[] breaks = linspace(x[0], x[x.length - 1], numPieces + 1);
+
+        // Initialize coefficients (assuming cubic spline with continuity constraints)
+        int numCoeffs = (breaks.length - 1) * 4; // 4 coefficients per interval (a, b, c, d)
+        double[] coeffs = new double[numCoeffs];
+
+        // Construct and solve for coefficients (simplified version)
+        for (int i = 0; i < breaks.length - 1; i++) {
+            // Assuming linear interpolation between breaks for simplicity
+            double xi = breaks[i];
+            double xj = breaks[i + 1];
+
+            int idx = i * 4;
+            coeffs[idx] = y[i];                // a (constant term)
+            coeffs[idx + 1] = 0;              // b (linear term, placeholder)
+            coeffs[idx + 2] = 0;              // c (quadratic term, placeholder)
+            coeffs[idx + 3] = (y[i + 1] - y[i]) / (xj - xi); // d (cubic term, slope)
+        }
+
+        return coeffs;
+    }
+
+    // Evaluate the spline at specific points
+    public static double[] evaluateSpline(double[] coeffs, double[] x, double[] breaks) {
+        double[] result = new double[x.length];
+        int numIntervals = breaks.length - 1;
+
+        for (int i = 0; i < x.length; i++) {
+            double xi = x[i];
+            for (int j = 0; j < numIntervals; j++) {
+                if (xi >= breaks[j] && xi <= breaks[j + 1]) {
+                    int idx = j * 4;
+                    double a = coeffs[idx];
+                    double b = coeffs[idx + 1];
+                    double c = coeffs[idx + 2];
+                    double d = coeffs[idx + 3];
+                    double t = xi - breaks[j];
+
+                    result[i] = a + b * t + c * Math.pow(t, 2) + d * Math.pow(t, 3);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // Generate equally spaced points
+    public static double[] linspace(double start, double end, int numPoints) {
+        double[] result = new double[numPoints];
+        double step = (end - start) / (numPoints - 1);
+        for (int i = 0; i < numPoints; i++) {
+            result[i] = start + i * step;
+        }
+        return result;
+    }
+
+    // Main function to test
+    public static void main(String[] args) {
+        // MATLAB example
+        double[] x = {1, 2, 3, 4, 5, 6};
+        double[] y = {2, 1, 2, 1, 2, 3};
+        int numPieces = 3;
+
+        // Spline fitting
+        double[] coeffs = splineFit(x, y, numPieces);
+
+        // Generate evaluation points
+        double[] xx = linspace(1, 6, 100);
+
+        // Breaks for the spline
+        double[] breaks = linspace(1, 6, numPieces + 1);
+
+        // Evaluate spline at xx
+        double[] yy = evaluateSpline(coeffs, xx, breaks);
+
+        // Print results
+        System.out.println("Fitted Coefficients: " + Arrays.toString(coeffs));
+        System.out.println("Evaluation Points (xx): " + Arrays.toString(xx));
+        System.out.println("Spline Values (yy): " + Arrays.toString(yy));
+    }
+}
+
