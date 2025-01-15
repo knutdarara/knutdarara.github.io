@@ -236,3 +236,31 @@ public class CubicSplineFitExample {
     }
 }
 
+import org.apache.commons.math3.analysis.interpolation.SplineInterpolator;
+import org.apache.commons.math3.analysis.polynomials.PolynomialSplineFunction;
+
+public class SplineFit {
+    public static PolynomialSplineFunction splineFit(double[] x, double[] y) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("Input arrays must have the same length.");
+        }
+
+        SplineInterpolator interpolator = new SplineInterpolator();
+        return interpolator.interpolate(x, y);
+    }
+
+    public static void main(String[] args) {
+        // Example data
+        double[] x = {0, 1, 2, 3, 4, 5};
+        double[] y = {0, 1, 0, -1, 0, 1};
+
+        // Perform spline fitting
+        PolynomialSplineFunction spline = splineFit(x, y);
+
+        // Evaluate spline at specific points
+        double[] evalPoints = {0.5, 1.5, 2.5, 3.5, 4.5};
+        for (double point : evalPoints) {
+            System.out.printf("Spline at %.2f = %.4f%n", point, spline.value(point));
+        }
+    }
+}
