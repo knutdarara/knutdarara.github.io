@@ -11,6 +11,7 @@ layout: post
 2. git action
 3. 테마 설정
    - 정보, 필요한 파일
+
 import org.apache.commons.math3.linear.*;
 
 public class PiecewisePolynomialSolver {
@@ -234,3 +235,146 @@ public class PiecewisePolynomial {
         return results;
     }
 }
+
+import java.util.Arrays;
+
+public class SplineFit {
+
+    // Main method to perform spline fitting
+    public static double[][] splinefit(double[] x, double[] y, double[] breaks) {
+        int n = breaks.length - 1; // Number of spline segments
+        int order = 4; // Default spline order (cubic)
+
+        // Generate B-spline basis
+        double[][] basis = splinebase(breaks, order, x);
+
+        // Solve for spline coefficients using least squares
+        double[][] coefs = lsqsolve(basis, y, order);
+
+        return coefs;
+    }
+
+    // Method to generate B-spline basis
+    public static double[][] splinebase(double[] breaks, int order, double[] x) {
+        int numBreaks = breaks.length;
+        int numKnots = numBreaks + order - 2;
+        double[] knots = new double[numKnots];
+
+        // Generate knots (extend break points)
+        System.arraycopy(breaks, 0, knots, 0, numBreaks);
+        for (int i = 0; i < order - 1; i++) {
+            knots[numBreaks + i] = breaks[numBreaks - 1];
+        }
+
+        int numBases = numKnots - order + 1;
+        double[][] basis = new double[x.length][numBases];
+
+        // Compute basis functions
+        for (int i = 0; i < numBases; i++) {
+            for (int j = 0; j < x.length; j++) {
+                basis[j][i] = bsplineBasis(knots, order, i, x[j]);
+            }
+        }
+
+        return basis;
+    }
+
+    // Recursive B-spline basis function
+    private static double bsplineBasis(double[] knots, int order, int i, double x) {
+        if (order == 1) {
+            return (x >= knots[i] && x < knots[i + 1]) ? 1.0 : 0.0;
+        }
+
+        double left = (x - knots[i]) / (knots[i + order - 1] - knots[i]);
+        double right = (knots[i + order] - x) / (knots[i + order] - knots[i + 1]);
+
+        left = Double.isNaN(left) ? 0 : left;
+        right = Double.isNaN(right) ? 0 : right;
+
+        return left * bsplineBasis(knots, order - 1, i, x)
+                + right * bsplineBasis(knots, order - 1, i + 1, x);
+    }
+
+    // Solve least squares problem
+    public static double[][] lsqsolve(double[][] basis, double[] y, int order) {
+        int m = basis.length;
+        int n = basis[0].length;
+
+        // Compute the transpose of the basis
+        double[][] basisT = transpose(basis);
+
+        // Compute A = basisT * basis
+        double[][] A = multiply(basisT, basis);
+
+        // Compute B = basisT * y
+        double[] B = multiply(basisT, y);
+
+        // Solve the linear system A * coefs = B
+        return gaussianElimination(A, B);
+    }
+
+    // Transpose a matrix
+    private static double[][] transpose(double[][] matrix) {
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+        double[][] transposed = new double[cols][rows];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                transposed[j][i] = matrix[i][j];
+            }
+        }
+        return transposed;
+    }
+
+    // Matrix multiplication
+    private static double[][] multiply(double[][] A, double[][] B) {
+        int rowsA = A.length;
+        int colsA = A[0].length;
+        int colsB = B[0].length;
+        double[][] result = new double[rowsA][colsB];
+
+        for (int i = 0; i < rowsA; i++) {
+            for (int j = 0; j < colsB; j++) {
+                for (int k = 0; k < colsA; k++) {
+                    result[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+        return result;
+    }
+
+    // Matrix-vector multiplication
+    private static double[] multiply(double[][] A, double[] B) {
+        int rowsA = A.length;
+        int colsA = A[0].length;
+        double[] result = new double[rowsA];
+
+        for (int i = 0; i < rowsA; i++) {
+            for (int j = 0; j < colsA; j++) {
+                result[i] += A[i][j] * B[j];
+            }
+        }
+        return result;
+    }
+
+    // Solve a linear system using Gaussian elimination
+    private static double[][] gaussianElimination(double[][] A, double[] B) {
+        // Gaussian elimination logic here
+        return new double[0][0];
+    }
+
+    public static void main(String[] args) {
+        // Test the implementation with sample data
+        double[] x = {0, 1, 2, 3, 4, 5};
+        double[] y = {0, 1, 4, 9, 16, 25};
+        double[] breaks = {0, 2.5, 5};
+
+        double[][] coefs = splinefit(x, y, breaks);
+
+        System.out.println("Spline coefficients:");
+        for (double[] row : coefs) {
+            System.out.println(Arrays.toString(row));
+        }
+    }
+}
+
