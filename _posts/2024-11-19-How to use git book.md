@@ -378,3 +378,52 @@ public class SplineFit {
     }
 }
 
+public static double[][] splinebase(double[] breaks, int order, double[] x) {
+    int numBreaks = breaks.length;
+    int numKnots = numBreaks + order - 2;
+    double[] knots = new double[numKnots];
+
+    // Generate knots (extend break points)
+    for (int i = 0; i < numBreaks; i++) {
+        knots[i] = breaks[i];
+    }
+    for (int i = 0; i < order - 1; i++) {
+        knots[numBreaks + i] = breaks[numBreaks - 1];
+    }
+
+    int numBases = numKnots - order + 1;
+    double[][] basis = new double[x.length][numBases];
+
+    // Compute basis functions
+    for (int i = 0; i < numBases; i++) {
+        for (int j = 0; j < x.length; j++) {
+            basis[j][i] = bsplineBasis(knots, order, i, x[j]);
+        }
+    }
+
+    return basis;
+}
+
+private static double bsplineBasis(double[] knots, int order, int i, double x) {
+    // Base case: order == 1
+    if (order == 1) {
+        if (i >= knots.length - 1) return 0.0; // Out of bounds
+        return (x >= knots[i] && x < knots[i + 1]) ? 1.0 : 0.0;
+    }
+
+    // Check bounds for safe computation
+    double denom1 = knots[i + order - 1] - knots[i];
+    double denom2 = knots[i + order] - knots[i + 1];
+
+    double left = 0.0;
+    double right = 0.0;
+
+    if (denom1 > 0) {
+        left = (x - knots[i]) / denom1 * bsplineBasis(knots, order - 1, i, x);
+    }
+    if (denom2 > 0) {
+        right = (knots[i + order] - x) / denom2 * bsplineBasis(knots, order - 1, i + 1, x);
+    }
+
+    return left + right;
+}
