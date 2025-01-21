@@ -11,95 +11,188 @@ layout: post
 2. git action
 3. 테마 설정
    - 정보, 필요한 파일
-import org.apache.commons.math3.complex.Complex;
-import org.apache.commons.math3.linear.*;
 
-public class LsqSolve {
+import java.util.Arrays;
 
-    // LSQ Solve 함수
-    public static RealVector lsqSolve(RealMatrix A, RealVector y, double beta) {
-        // 기본 솔루션 (A * u = y) -> u = A^-1 * y
-        RealVector u = A.operate(y);
+public class SplineBase {
 
-        // Robust fitting (가중치 업데이트를 위한 루프)
-        if (beta > 0) {
-            int m = y.getDimension();
-            int n = A.getColumnDimension();
-            double alpha = 0.5 * beta / (1 - beta) / m;
+    public static class PiecewisePolynomial {
+        double[] breaks;
+        double[][] coefs;
+        int order;
 
-            for (int k = 0; k < 3; k++) {
-                // Residual 계산
-                RealVector r = A.operate(u).subtract(y);
-                
-                // 복소수 켤레 계산 (실수와 허수를 분리하여 처리)
-                Complex[] rr = new Complex[r.getDimension()];
-                for (int i = 0; i < r.getDimension(); i++) {
-                    rr[i] = new Complex(r.getEntry(i), 0);  // 실수값을 복소수로 처리 (허수부는 0)
+        public PiecewisePolynomial(double[] breaks, double[][] coefs, int order) {
+            this.breaks = breaks;
+            this.coefs = coefs;
+            this.order = order;
+        }
+
+        public double[] getBreaks() {
+            return breaks;
+        }
+
+        public double[][] getCoefs() {
+            return coefs;
+        }
+
+        public int getOrder() {
+            return order;
+        }
+    }
+
+    public static PiecewisePolynomial splineBase(double[] breaks, int n) {
+        breaks = Arrays.copyOf(breaks, breaks.length);   // Breaks
+        double[] breaks0 = Arrays.copyOf(breaks, breaks.length); // Initial breaks
+        double[] h = new double[breaks.length - 1];
+        for (int i = 0; i < h.length; i++) {
+            h[i] = breaks[i + 1] - breaks[i];  // Spacing
+        }
+        int pieces = h.length;
+        int deg = n - 1;
+
+        // Extend breaks periodically
+        if (deg > 0) {
+            double[] hcopy;
+            if (deg <= pieces) {
+                hcopy = Arrays.copyOf(h, h.length);
+            } else {
+                hcopy = new double[deg];
+                for (int i = 0; i < deg; i++) {
+                    hcopy[i] = h[i % pieces];
                 }
+            }
 
-                // 복소수 켤레 구하기
-                Complex[] rrConjugate = new Complex[rr.length];
-                for (int i = 0; i < rr.length; i++) {
-                    rrConjugate[i] = rr[i].conjugate();  // 복소수의 켤레
-                }
+            // To the left
+            double[] hl = new double[deg];
+            for (int i = 0; i < deg; i++) {
+                hl[i] = hcopy[hcopy.length - 1 - i];
+            }
+            double[] bl = new double[deg];
+            bl[0] = breaks[0] - Arrays.stream(hl).sum();
+            for (int i = 1; i < deg; i++) {
+                bl[i] = bl[i - 1] - hl[i];
+            }
 
-                // 켤레 복소수 연산 후 결과를 실수로 변환하여 사용
-                double[] rrReal = new double[rrConjugate.length];
-                for (int i = 0; i < rrConjugate.length; i++) {
-                    rrReal[i] = rrConjugate[i].getReal();  // 실수 부분 추출
-                }
+            // To the right
+            double[] hr = Arrays.copyOfRange(hcopy, 0, deg);
+            double[] br = new double[deg];
+            br[0] = breaks[pieces - 1] + Arrays.stream(hr).sum();
+            for (int i = 1; i < deg; i++) {
+                br[i] = br[i - 1] + hr[i];
+            }
 
-                RealVector rrMean = new ArrayRealVector(rrReal);
+            // Add breaks
+            breaks = new double[breaks.length + 2 * deg];
+            System.arraycopy(bl, 0, breaks, 0, deg);
+            System.arraycopy(breaks0, 0, breaks, deg, pieces);
+            System.arraycopy(br, 0, breaks, deg + pieces, deg);
+            h = new double[breaks.length - 1];
+            for (int i = 0; i < h.length; i++) {
+                h[i] = breaks[i + 1] - breaks[i];
+            }
+            pieces = h.length;
+        }
 
-                // rrmean 계산
-                for (int i = 0; i < rrMean.getDimension(); i++) {
-                    if (rrMean.getEntry(i) == 0) {
-                        rrMean.setEntry(i, 1);
-                    }
-                }
+        // Initiate polynomial coefficients
+        double[][] coefs = new double[n * pieces][n];
+        for (int i = 0; i < coefs.length; i += n) {
+            coefs[i][0] = 1;
+        }
 
-                // rrhat 계산 (복소수 연산)
-                RealVector rrhat = rrMean.ebeDivide(r);
-
-                // 가중치 계산 (원소별 exp 적용)
-                RealVector w = rrhat.mapMultiply(-1);
-
-                // 원소별로 지수 함수 적용
-                for (int i = 0; i < w.getDimension(); i++) {
-                    w.setEntry(i, Math.exp(w.getEntry(i)));  // exp 함수를 원소별로 적용
-                }
-
-                // 가중치 행렬을 대각 행렬로 변환
-                RealMatrix spw = MatrixUtils.createRealIdentityMatrix(n);
-                for (int i = 0; i < n; i++) {
-                    spw.setEntry(i, i, w.getEntry(i));
-                }
-
-                // 가중 문제 해결
-                RealVector ySpw = y.ebeMultiply(w);
-                u = A.transpose().operate(spw.operate(ySpw));
+        // Expand h
+        int[][] ii = new int[deg + 1][pieces];
+        for (int i = 0; i < pieces; i++) {
+            ii[0][i] = i + 1;
+        }
+        for (int i = 1; i <= deg; i++) {
+            for (int j = 0; j < pieces; j++) {
+                ii[i][j] = ii[i - 1][j] + 1;
+            }
+        }
+        int[] H = new int[ii.length * ii[0].length];
+        int idx = 0;
+        for (int i = 0; i < ii.length; i++) {
+            for (int j = 0; j < ii[i].length; j++) {
+                H[idx++] = h[ii[i][j] - 1];
             }
         }
 
-        return u;
+        // Recursive generation of B-splines
+        for (int k = 2; k <= n; k++) {
+            // Antiderivatives of splines
+            for (int j = 0; j < k - 1; j++) {
+                for (int i = 0; i < coefs.length; i++) {
+                    coefs[i][j] = coefs[i][j] * H[i] / (k - j);
+                }
+            }
+
+            double[] Q = new double[coefs.length];
+            for (int i = 0; i < coefs.length; i++) {
+                Q[i] = Arrays.stream(coefs[i]).sum();
+            }
+
+            double[][] QMat = new double[n][pieces];
+            int col = 0;
+            for (int i = 0; i < Q.length; i++) {
+                QMat[i % n][col] = Q[i];
+                if (i % n == n - 1) {
+                    col++;
+                }
+            }
+
+            double[] c0 = new double[Q.length + deg];
+            for (int i = 0; i < deg; i++) {
+                c0[i] = 0;
+            }
+            System.arraycopy(QMat[0], 0, c0, deg, QMat[0].length);
+
+            // Normalize by max value
+            double[] fmax = new double[Q.length];
+            for (int i = 0; i < Q.length; i++) {
+                fmax[i] = Q[i];
+            }
+            for (int j = 0; j < k; j++) {
+                for (int i = 0; i < coefs.length; i++) {
+                    coefs[i][j] = coefs[i][j] / fmax[i];
+                }
+            }
+
+            // Differentiation of adjacent antiderivatives
+            for (int i = 0; i < coefs.length - deg; i++) {
+                for (int j = 0; j < k; j++) {
+                    coefs[i][j] = coefs[i][j] - coefs[deg + i][j];
+                }
+            }
+        }
+
+        // Scale coefficients
+        double[] scale = new double[H.length];
+        Arrays.fill(scale, 1);
+        for (int k = 0; k < n - 1; k++) {
+            for (int i = 0; i < H.length; i++) {
+                scale[i] = scale[i] / H[i];
+            }
+            for (int i = 0; i < coefs.length; i++) {
+                coefs[i][n - k - 1] = scale[i] * coefs[i][n - k - 1];
+            }
+        }
+
+        pieces = pieces - 2 * deg;
+
+        // Create piecewise polynomial
+        return new PiecewisePolynomial(breaks0, coefs, n);
     }
 
-    // 테스트용 main 메서드
     public static void main(String[] args) {
-        // 예시 행렬 A와 벡터 y
-        double[][] matrixData = {
-            {1.0, 2.0},
-            {3.0, 4.0}
-        };
-        double[] vectorData = {1.0, 2.0};
-
-        RealMatrix A = MatrixUtils.createRealMatrix(matrixData);
-        RealVector y = new ArrayRealVector(vectorData);
-
-        double beta = 0.5;
-
-        // LSQ 해결
-        RealVector result = lsqSolve(A, y, beta);
-        System.out.println("Result: " + result);
+        // Test the function
+        double[] breaks = {0, 1, 2, 3, 4};
+        int n = 4;
+        PiecewisePolynomial pp = splineBase(breaks, n);
+        
+        System.out.println("Breaks: " + Arrays.toString(pp.getBreaks()));
+        System.out.println("Coefs: ");
+        for (double[] row : pp.getCoefs()) {
+            System.out.println(Arrays.toString(row));
+        }
     }
 }
