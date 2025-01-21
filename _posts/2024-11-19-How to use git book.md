@@ -427,3 +427,51 @@ private static double bsplineBasis(double[] knots, int order, int i, double x) {
 
     return left + right;
 }
+
+
+import org.apache.commons.math3.linear.*;
+
+public class LsqSolve {
+    public static RealVector lsqSolve(RealMatrix A, RealVector y, double beta) {
+        // Sparse-complex limitations 처리
+        if (A instanceof BlockRealMatrix && !y.isRealVector()) {
+            A = new Array2DRowRealMatrix(A.getData());
+        }
+
+        // 기본 솔루션
+        RealVector u = A.preMultiply(y);
+        u = y.mapDivide(A);
+
+        // Robust fitting
+        if (beta > 0) {
+            int m = y.getDimension();
+            int n = A.getColumnDimension();
+            double alpha = 0.5 * beta / (1 - beta) / m;
+
+            for (int k = 0; k < 3; k++) {
+                // Residual 계산
+                RealVector r = A.operate(u).subtract(y);
+                RealVector rr = r.ebeMultiply(r.mapConjugate());
+                RealVector rrmean = rr.mapDivide(n);
+
+                for (int i = 0; i < rrmean.getDimension(); i++) {
+                    if (rrmean.getEntry(i) == 0) {
+                        rrmean.setEntry(i, 1);
+                    }
+                }
+
+                // rrhat 계산
+                RealVector rrhat = rr.mapDivide(rrmean);
+                RealVector w = rrhat.mapMultiply(-1);
+                w = w.mapExp();
+                
+                // 가중치 행렬
+                DiagonalMatrix spw = new DiagonalMatrix(w.toArray());
+
+                // 가중 문제 해결
+                u = A.transpose().operate(spw.operate(y));
+            }
+        }
+        return u;
+    }
+}
