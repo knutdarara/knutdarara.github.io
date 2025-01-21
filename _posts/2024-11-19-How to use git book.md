@@ -188,3 +188,49 @@ public class SplineFit {
         }
     }
 }
+import java.util.ArrayList;
+import java.util.List;
+
+public class PiecewisePolynomial {
+    private List<double[]> coefficients; // 다항식 계수 리스트
+    private double[] breaks;            // 구간 분할점
+
+    public PiecewisePolynomial(List<double[]> coefficients, double[] breaks) {
+        this.coefficients = coefficients;
+        this.breaks = breaks;
+    }
+
+    public double evaluate(double x) {
+        int segmentIndex = findSegmentIndex(x);
+        if (segmentIndex == -1) {
+            throw new IllegalArgumentException("Input x is out of the range of breaks.");
+        }
+
+        double[] coeff = coefficients.get(segmentIndex);
+        double xShifted = x - breaks[segmentIndex]; // x를 해당 구간 기준으로 변환
+        double result = 0;
+
+        // Horner's method를 사용해 다항식 계산
+        for (int i = 0; i < coeff.length; i++) {
+            result = result * xShifted + coeff[i];
+        }
+        return result;
+    }
+
+    private int findSegmentIndex(double x) {
+        for (int i = 0; i < breaks.length - 1; i++) {
+            if (x >= breaks[i] && x <= breaks[i + 1]) {
+                return i;
+            }
+        }
+        return -1; // 범위 외
+    }
+
+    public List<Double> evaluate(double[] xValues) {
+        List<Double> results = new ArrayList<>();
+        for (double x : xValues) {
+            results.add(evaluate(x));
+        }
+        return results;
+    }
+}
