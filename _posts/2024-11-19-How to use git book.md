@@ -196,3 +196,43 @@ public class SplineBase {
         }
     }
 }
+
+public class MatrixOperation {
+    public static void main(String[] args) {
+        // 예제 데이터 (행렬 크기 설정 필요)
+        int rows = 10; // 총 행 개수
+        int cols = 5;  // k 값
+        int deg = 2;   // deg 값
+        int n = rows - deg; // n 값 설정 (Matlab 코드 해석에 따라 rows - deg로 설정)
+
+        double[][] coefs = new double[rows][cols]; // 원본 행렬
+        double[][] Coef = new double[rows - deg][cols]; // 결과 행렬 (크기 조정)
+
+        // 예제 행렬에 임의의 값 할당 (실제 사용 시 데이터 입력 필요)
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                coefs[i][j] = Math.random() * 10; // 0~10 사이 랜덤값
+            }
+        }
+
+        // 변환된 Matlab 연산
+        for (int i = 0; i < rows - deg; i++) { // 1:end-deg → Java에서는 0부터 시작
+            for (int j = 0; j < cols; j++) {   // 1:k → 0부터 k-1까지
+                if (n + i < rows) {  // Out of Bounds 방지 (Matlab에서는 자동 처리되지만 Java는 직접 확인 필요)
+                    Coef[i][j] = coefs[i][j] - coefs[n + i][j];
+                } else {
+                    Coef[i][j] = coefs[i][j]; // 안전 처리 (필요시 다른 방식으로 조정 가능)
+                }
+            }
+        }
+
+        // 결과 출력 (확인용)
+        for (double[] row : Coef) {
+            for (double val : row) {
+                System.out.printf("%.2f ", val);
+            }
+            System.out.println();
+        }
+    }
+}
+
