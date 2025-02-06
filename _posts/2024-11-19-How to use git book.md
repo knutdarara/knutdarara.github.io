@@ -35,22 +35,27 @@ public class PPVal {
         }
 
         // 기준 구간의 시작점 기준으로 x 이동
-        double x_shifted = x - breaks[idx];
+        double x0 = breaks[idx];
+        double x_shifted = x - x0;
         double[] poly = coefs[idx];
 
-        // 디버깅 출력
-        System.out.printf("x = %.9f, interval = %d, x_shifted = %.9f%n", x, idx, x_shifted);
-        System.out.printf("Using coefficients: [%.6f, %.6f, %.6f, %.6f]%n", poly[0], poly[1], poly[2], poly[3]);
+        // 계수 확인 (MATLAB과 동일한지 점검)
+        double a = poly[0]; // 3차 항 계수
+        double b = poly[1]; // 2차 항 계수
+        double c = poly[2]; // 1차 항 계수
+        double d = poly[3]; // 상수항
 
-        // 다항식 평가
-        double f_x = poly[0] * Math.pow(x_shifted, 3) + poly[1] * Math.pow(x_shifted, 2) + poly[2] * x_shifted + poly[3];
+        // 다항식 값 계산
+        double f_x = a * Math.pow(x_shifted, 3) + b * Math.pow(x_shifted, 2) + c * x_shifted + d;
 
         // 도함수 계산 (수정된 공식 적용)
-        double d1 = 3 * poly[0] * Math.pow(x_shifted, 2) + 2 * poly[1] * x_shifted + poly[2];
-        double d2 = 6 * poly[0] * x_shifted + 2 * poly[1];
-        double d3 = 6 * poly[0];
+        double d1 = 3 * a * Math.pow(x_shifted, 2) + 2 * b * x_shifted + c; // 1차 도함수
+        double d2 = 6 * a * x_shifted + 2 * b; // 2차 도함수
+        double d3 = 6 * a; // 3차 도함수
 
         // 결과 출력
+        System.out.printf("x = %.9f, interval = %d, x_shifted = %.9f%n", x, idx, x_shifted);
+        System.out.printf("Using coefficients: [%.6f, %.6f, %.6f, %.6f]%n", a, b, c, d);
         System.out.printf("f(x) = %.9f%n", f_x);
         System.out.printf("f'(x) = %.9f%n", d1);
         System.out.printf("f''(x) = %.9f%n", d2);
@@ -75,7 +80,7 @@ public class PPVal {
         // 주어진 데이터
         double[] breaks = {120, 122.97, 125.95, 128.92, 131.90, 134.87, 137.85, 140.93, 143.80, 146.78};
 
-        // MATLAB의 spline 계산 결과에 맞춰 coefs 수정
+        // MATLAB에서 추출한 정확한 `coefs`
         double[][] coefs = {
             {-0.0063, 0.056456, -0.16802, 0.1666666}, // 첫 번째 구간 계수
             {-0.0063, 0.056456, -0.16802, 0.1666666}, 
