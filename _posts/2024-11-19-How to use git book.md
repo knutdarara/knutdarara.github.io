@@ -27,17 +27,22 @@ public class SparseMatrix {
         this.cols = n;
     }
 
-    // Insert a value into the sparse matrix with 5 input values
-    public void insert(int[] i, int[] j, double[] s) {
-        // Ensure that the length of i, j, s arrays are the same
-        if (i.length == j.length && j.length == s.length) {
-            for (int index = 0; index < i.length; index++) {
-                if (s[index] != 0) {
-                    matrix.put(new Pair<>(i[index], j[index]), s[index]);
+    // Insert a value into the sparse matrix using arrays for i, j, s
+    public void insert(int[][] i, int[][] j, double[] s, int numRows) {
+        // Check if the arrays i, j, and s have valid lengths
+        if (i.length == numRows && j.length == numRows && s.length == numRows) {
+            for (int row = 0; row < numRows; row++) {
+                for (int col = 0; col < i[row].length; col++) {
+                    int rowIndex = i[row][col];
+                    int colIndex = j[row][col];
+                    double value = s[row];
+                    if (value != 0) {
+                        matrix.put(new Pair<>(rowIndex, colIndex), value);
+                    }
                 }
             }
         } else {
-            System.out.println("Error: Input arrays are not of the same length.");
+            System.out.println("Error: Input arrays are not of valid length.");
         }
     }
 
@@ -58,16 +63,29 @@ public class SparseMatrix {
     }
 
     public static void main(String[] args) {
-        // Example of creating a sparse matrix of size 4x5
-        SparseMatrix sparseMatrix = new SparseMatrix(4, 5);
+        // Example of creating a sparse matrix of size 4x2000
+        SparseMatrix sparseMatrix = new SparseMatrix(4, 2000);
 
-        // 5 input values: rows (i), columns (j), and values (s)
-        int[] rows = {0, 1, 3, 2, 1};
-        int[] cols = {0, 2, 4, 3, 1};
-        double[] values = {7.0, 5.0, 3.0, 1.0, 8.0};
+        // 4x2000 arrays: rows (i), columns (j)
+        int[][] rows = {
+            {0, 1, 2, 3}, // Example of row indices
+            {1, 2, 3, 0},
+            {2, 1, 0, 3},
+            {3, 0, 1, 2}
+        };
+
+        int[][] cols = {
+            {0, 1, 2, 3}, // Example of column indices
+            {1, 2, 3, 0},
+            {2, 1, 0, 3},
+            {3, 0, 1, 2}
+        };
+
+        // 2000 size array: s (values corresponding to the indices)
+        double[] values = {7.0, 5.0, 3.0, 1.0}; // Example values, this will be applied for each row
 
         // Insert these values into the sparse matrix
-        sparseMatrix.insert(rows, cols, values);
+        sparseMatrix.insert(rows, cols, values, 4);
 
         // Retrieve and print values from the sparse matrix
         System.out.println("Value at (1, 2): " + sparseMatrix.get(1, 2));  // Output: 5.0
