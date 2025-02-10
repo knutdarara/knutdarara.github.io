@@ -13,7 +13,95 @@ layout: post
    - 정보, 필요한 파일
 
 
+import java.util.HashMap;
+import java.util.Map;
 
+public class SparseMatrix {
+    private Map<Pair<Integer, Integer>, Double> matrix;
+    private int rows, cols;
+
+    // Constructor to create a sparse matrix of size m x n
+    public SparseMatrix(int m, int n) {
+        matrix = new HashMap<>();
+        this.rows = m;
+        this.cols = n;
+    }
+
+    // Insert a value into the sparse matrix
+    public void insert(int i, int j, double value) {
+        if (value != 0) {
+            matrix.put(new Pair<>(i, j), value);
+        }
+    }
+
+    // Get a value from the sparse matrix
+    public double get(int i, int j) {
+        return matrix.getOrDefault(new Pair<>(i, j), 0.0);
+    }
+
+    // Get the sparse matrix as a string (optional for testing)
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Pair<Integer, Integer>, Double> entry : matrix.entrySet()) {
+            sb.append("Row: ").append(entry.getKey().getFirst())
+              .append(", Col: ").append(entry.getKey().getSecond())
+              .append(", Value: ").append(entry.getValue()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        // Example of creating a sparse matrix of size 4x5
+        SparseMatrix sparseMatrix = new SparseMatrix(4, 5);
+
+        // Insert some values into the sparse matrix
+        sparseMatrix.insert(1, 2, 5.0);
+        sparseMatrix.insert(3, 4, 3.0);
+        sparseMatrix.insert(0, 0, 7.0);
+
+        // Retrieve and print values from the sparse matrix
+        System.out.println("Value at (1, 2): " + sparseMatrix.get(1, 2));  // Output: 5.0
+        System.out.println("Value at (3, 4): " + sparseMatrix.get(3, 4));  // Output: 3.0
+        System.out.println("Value at (0, 0): " + sparseMatrix.get(0, 0));  // Output: 7.0
+        System.out.println("Value at (2, 3): " + sparseMatrix.get(2, 3));  // Output: 0.0
+
+        // Display the sparse matrix representation
+        System.out.println(sparseMatrix.toString());
+    }
+}
+
+// Helper class to store row and column index pairs
+class Pair<K, V> {
+    private K first;
+    private V second;
+
+    public Pair(K first, V second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public K getFirst() {
+        return first;
+    }
+
+    public V getSecond() {
+        return second;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Pair<?, ?> pair = (Pair<?, ?>) o;
+        return first.equals(pair.first) && second.equals(pair.second);
+    }
+
+    @Override
+    public int hashCode() {
+        return first.hashCode() * 31 + second.hashCode();
+    }
+}
+ㄴㅁㄴㅇㄹㅁㄴㅇㄹ
 
 ㄴㅇㄹ
 public class PPVal {
