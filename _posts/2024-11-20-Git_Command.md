@@ -10,13 +10,14 @@ layout: post
 1. 
 
 2. 
-
-import java.util.Arrays;
+import java.util.*;
 
 public class SparseMatrix {
 
     public static double[][] sparse(int[][] ii, int[][] jj, double[][] A, int colCnt) {
-        // 입력 크기 확인 (ii, jj의 크기가 같아야 함)
+        List<int[]> coordinates = new ArrayList<>();
+        List<Double> values = new ArrayList<>();
+
         int rowSize = ii.length;
         int colSize = ii[0].length;
 
@@ -24,40 +25,46 @@ public class SparseMatrix {
             throw new IllegalArgumentException("ii, jj의 크기가 일치하지 않습니다.");
         }
 
-        // A의 크기 검증 및 유연한 매핑 (비대칭 대응)
+        // A의 크기 유연성 검토
         int aRowSize = A.length;
         int aColSize = A[0].length;
-        if (!(aRowSize == rowSize && aColSize == colSize) && !(aRowSize == colSize && aColSize == rowSize)) {
-            throw new IllegalArgumentException("A의 크기가 ii, jj와 호환되지 않습니다.");
-        }
+        boolean transposeA = (aRowSize == colSize && aColSize == rowSize);
 
-        // 최대 행 인덱스 계산
-        int rowCnt = 0;
-        for (int i = 0; i < rowSize; i++) {
-            for (int j = 0; j < colSize; j++) {
-                rowCnt = Math.max(rowCnt, ii[i][j]);
-            }
-        }
-        rowCnt++; // 0-based index 고려하여 크기 증가
-
-        // 결과 행렬 초기화
-        double[][] result = new double[rowCnt][colCnt];
-
-        // 희소 행렬 채우기
+        // 데이터를 리스트에 저장
         for (int i = 0; i < rowSize; i++) {
             for (int j = 0; j < colSize; j++) {
                 int row = ii[i][j];
                 int col = jj[i][j];
+                double value = transposeA ? A[j][i] : A[i][j];
 
-                if (row >= rowCnt || col >= colCnt) {
-                    throw new IndexOutOfBoundsException("인덱스 범위를 초과했습니다.");
-                }
-
-                // A가 비대칭일 경우, A[i][j] 또는 A[j][i]로 매핑
-                double value = (A.length == rowSize) ? A[i][j] : A[j][i];
-
-                result[row][col] += value; // 같은 위치 값 합산
+                coordinates.add(new int[]{row, col});
+                values.add(value);
             }
+        }
+
+        // 좌표를 (row, col) 기준으로 정렬
+        Collections.sort(coordinates, (a, b) -> a[0] == b[0] ? Integer.compare(a[1], b[1]) : Integer.compare(a[0], b[0]));
+
+        // 중복된 좌표 값 합산
+        Map<String, Double> sparseMap = new LinkedHashMap<>();
+        for (int i = 0; i < coordinates.size(); i++) {
+            int row = coordinates.get(i)[0];
+            int col = coordinates.get(i)[1];
+            String key = row + "," + col;
+
+            sparseMap.put(key, sparseMap.getOrDefault(key, 0.0) + values.get(i));
+        }
+
+        // 희소 행렬 초기화
+        int rowCnt = coordinates.stream().mapToInt(c -> c[0]).max().orElse(0) + 1;
+        double[][] result = new double[rowCnt][colCnt];
+
+        // 희소 행렬 생성
+        for (Map.Entry<String, Double> entry : sparseMap.entrySet()) {
+            String[] rc = entry.getKey().split(",");
+            int row = Integer.parseInt(rc[0]);
+            int col = Integer.parseInt(rc[1]);
+            result[row][col] = entry.getValue();
         }
 
         return result;
@@ -70,19 +77,16 @@ public class SparseMatrix {
     }
 
     public static void main(String[] args) {
-        // 예제 1: ii, jj가 [4][36], A가 [36][4]일 경우
-        int[][] ii = new int[4][36];
-        int[][] jj = new int[4][36];
-        double[][] A = new double[36][4]; // A가 비대칭
-
-        // 테스트 데이터 채우기 (간단한 패턴)
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 36; j++) {
-                ii[i][j] = j % 10;
-                jj[i][j] = i % 4;
-                A[j][i] = (i + 1) * (j + 1) * 0.1; // 임의의 값 설정
-            }
-        }
+        // 테스트 데이터 (논문과 동일한 방식 적용)
+        int[][] ii = {
+            {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}
+        };
+        int[][] jj = {
+            {1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0}
+        };
+        double[][] A = {
+            {5.0, 8.2, 3.5, 4.1, 2.0, 6.7, 1.1, 7.3, 5.5, 9.0, 2.8, 3.2}
+        };
 
         int colCnt = 5;
 
