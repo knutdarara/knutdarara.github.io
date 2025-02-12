@@ -11,36 +11,34 @@ layout: post
 
 2. 
 public class SparseMatrix {
-    private int rows;
-    private int cols;
-    private Map<Integer, Map<Integer, Double>> matrix;
-
-    public SparseMatrix(int[][] ii, int[][] jj, double[][] A, int colCnt) {
-        this.rows = ii.length;
-        this.cols = colCnt;
-        this.matrix = new HashMap<>();
-
+    public static Double[][] createSparseMatrix(int[][] ii, int[][] jj, double[][] A, int colCnt) {
+        // 행의 수를 결정합니다 (ii 배열의 길이)
+        int rowCnt = ii.length;
+        
+        // 결과 행렬을 초기화합니다
+        Double[][] result = new Double[rowCnt][colCnt];
+        
+        // 모든 요소를 null로 초기화합니다 (sparse representation)
+        for (int i = 0; i < rowCnt; i++) {
+            for (int j = 0; j < colCnt; j++) {
+                result[i][j] = null;
+            }
+        }
+        
+        // 주어진 데이터로 sparse matrix를 채웁니다
         for (int i = 0; i < ii.length; i++) {
             for (int j = 0; j < ii[i].length; j++) {
                 int row = ii[i][j];
                 int col = jj[i][j];
                 double value = A[i][j];
-                matrix.computeIfAbsent(row, k -> new HashMap<>()).put(col, value);
+                
+                // 값이 0이 아닌 경우에만 저장합니다
+                if (value != 0) {
+                    result[row][col] = value;
+                }
             }
         }
-    }
-
-    public Double[][] toDenseMatrix() {
-        Double[][] dense = new Double[rows][cols];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                dense[i][j] = get(i, j);
-            }
-        }
-        return dense;
-    }
-
-    private Double get(int row, int col) {
-        return matrix.getOrDefault(row, Collections.emptyMap()).getOrDefault(col, 0.0);
+        
+        return result;
     }
 }
