@@ -10,66 +10,36 @@ layout: post
 1. 
 
 2. 
-import java.util.*;
+import java.util.Arrays;
 
 public class SparseMatrix {
 
+    // sparse 함수
     public static double[][] sparse(int[][] ii, int[][] jj, double[][] A, int colCnt) {
-        List<int[]> coordinates = new ArrayList<>();
-        List<Double> values = new ArrayList<>();
+        int rowSize = ii.length;  // ii의 행 개수 (4)
+        int colSize = ii[0].length;  // ii의 열 개수 (36)
 
-        int rowSize = ii.length;
-        int colSize = ii[0].length;
+        // 결과 행렬 초기화
+        double[][] result = new double[rowSize][colSize];
 
-        if (jj.length != rowSize || jj[0].length != colSize) {
-            throw new IllegalArgumentException("ii, jj의 크기가 일치하지 않습니다.");
-        }
-
-        // A의 크기 유연성 검토
-        int aRowSize = A.length;
-        int aColSize = A[0].length;
-        boolean transposeA = (aRowSize == colSize && aColSize == rowSize);
-
-        // 데이터를 리스트에 저장
+        // ii와 jj를 기준으로 A 값 배치
         for (int i = 0; i < rowSize; i++) {
             for (int j = 0; j < colSize; j++) {
-                int row = ii[i][j];
-                int col = jj[i][j];
-                double value = transposeA ? A[j][i] : A[i][j];
+                // 1-based index를 0-based index로 변환
+                int row = ii[i][j] - 1;  // ii의 값에 맞게 행 번호 설정
+                int col = jj[i][j] - 1;  // jj의 값에 맞게 열 번호 설정
 
-                coordinates.add(new int[]{row, col});
-                values.add(value);
+                if (row >= 0 && row < rowSize && col >= 0 && col < colSize) {
+                    // A의 값을 result 행렬의 해당 위치에 배치
+                    result[row][col] = A[j][i];  // A[j][i] 값을 배치
+                }
             }
-        }
-
-        // 좌표를 (row, col) 기준으로 정렬
-        Collections.sort(coordinates, (a, b) -> a[0] == b[0] ? Integer.compare(a[1], b[1]) : Integer.compare(a[0], b[0]));
-
-        // 중복된 좌표 값 합산
-        Map<String, Double> sparseMap = new LinkedHashMap<>();
-        for (int i = 0; i < coordinates.size(); i++) {
-            int row = coordinates.get(i)[0];
-            int col = coordinates.get(i)[1];
-            String key = row + "," + col;
-
-            sparseMap.put(key, sparseMap.getOrDefault(key, 0.0) + values.get(i));
-        }
-
-        // 희소 행렬 초기화
-        int rowCnt = coordinates.stream().mapToInt(c -> c[0]).max().orElse(0) + 1;
-        double[][] result = new double[rowCnt][colCnt];
-
-        // 희소 행렬 생성
-        for (Map.Entry<String, Double> entry : sparseMap.entrySet()) {
-            String[] rc = entry.getKey().split(",");
-            int row = Integer.parseInt(rc[0]);
-            int col = Integer.parseInt(rc[1]);
-            result[row][col] = entry.getValue();
         }
 
         return result;
     }
 
+    // 행렬 출력 함수
     public static void printMatrix(double[][] matrix) {
         for (double[] row : matrix) {
             System.out.println(Arrays.toString(row));
@@ -77,18 +47,29 @@ public class SparseMatrix {
     }
 
     public static void main(String[] args) {
-        // 테스트 데이터 (논문과 동일한 방식 적용)
+        // 예제 데이터
         int[][] ii = {
-            {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}
-        };
-        int[][] jj = {
-            {1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0}
-        };
-        double[][] A = {
-            {5.0, 8.2, 3.5, 4.1, 2.0, 6.7, 1.1, 7.3, 5.5, 9.0, 2.8, 3.2}
+            {1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36},
+            {2,3,4,5,6,7,8,9,10,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37},
+            {3,4,5,6,7,8,9,10,11,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38},
+            {4,5,6,7,8,9,10,11,12,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39}
         };
 
-        int colCnt = 5;
+        int[][] jj = {
+            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36},
+            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36},
+            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36},
+            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36}
+        };
+
+        double[][] A = new double[36][4];
+        for (int i = 0; i < 36; i++) {
+            for (int j = 0; j < 4; j++) {
+                A[i][j] = Math.pow(10, j) * (i + 1); // 1, 11, 111, 1111...
+            }
+        }
+
+        int colCnt = 12;
 
         // 희소 행렬 생성
         double[][] sparseMatrix = sparse(ii, jj, A, colCnt);
