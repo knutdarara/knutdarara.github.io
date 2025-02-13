@@ -10,31 +10,24 @@ layout: post
 1. 
 
 2. 
-import java.util.Arrays;
+import org.apache.commons.math3.linear.OpenMapRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 
-public class SparseMatrixCSR {
-
-    public static Double[][] toSparseMatrix(int[][] ii, int[][] jj, double[][] A, int colCnt, int rowCnt) {
-        // 결과 희소 행렬 초기화
-        Double[][] S = new Double[rowCnt][colCnt];
-
-        // 0으로 초기화
-        for (int i = 0; i < rowCnt; i++) {
-            Arrays.fill(S[i], 0.0);
-        }
-
-        // ii, jj, A의 크기가 동일하다고 가정
+public class SparseMatrixApache {
+    
+    public static RealMatrix createSparseMatrix(int[][] ii, int[][] jj, double[][] A, int colCnt, int rowCnt) {
+        RealMatrix sparseMatrix = new OpenMapRealMatrix(rowCnt, colCnt); // 희소 행렬 생성
+        
         for (int i = 0; i < ii.length; i++) {
             for (int j = 0; j < ii[i].length; j++) {
-                int row = ii[i][j];  // 행 인덱스
-                int col = jj[i][j];  // 열 인덱스
+                int row = ii[i][j];
+                int col = jj[i][j];
                 double value = A[j][i]; // 값 매핑
-
-                // 희소 행렬에 값 할당
-                S[row][col] = value;
+                
+                sparseMatrix.setEntry(row, col, value); // 희소 행렬에 값 삽입
             }
         }
-        return S;
+        return sparseMatrix;
     }
 
     public static void main(String[] args) {
@@ -65,12 +58,16 @@ public class SparseMatrixCSR {
         int colCnt = 36;
         int rowCnt = 12;
 
-        // 변환 실행
-        Double[][] S = toSparseMatrix(ii, jj, A, colCnt, rowCnt);
+        // 희소 행렬 변환
+        RealMatrix sparseMatrix = createSparseMatrix(ii, jj, A, colCnt, rowCnt);
 
-        // 결과 출력
-        for (Double[] row : S) {
-            System.out.println(Arrays.toString(row));
+        // 출력
+        System.out.println("Sparse Matrix:");
+        for (int i = 0; i < rowCnt; i++) {
+            for (int j = 0; j < colCnt; j++) {
+                System.out.printf("%.0f ", sparseMatrix.getEntry(i, j));
+            }
+            System.out.println();
         }
     }
 }
