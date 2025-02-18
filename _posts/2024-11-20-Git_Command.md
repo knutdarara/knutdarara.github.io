@@ -10,64 +10,32 @@ layout: post
 1. 
 
 2. 
-import org.apache.commons.math3.linear.OpenMapRealMatrix;
-import org.apache.commons.math3.linear.RealMatrix;
+public class SparseMatrix {
+    // CSR 유지 방식
+    public static double[][] sparseCSR(int[][] ii, int[][] jj, double[][] A, int colCnt, int rowCnt) {
+        double[][] result = new double[colCnt][rowCnt];
 
-public class SparseMatrixApache {
-    
-    public static RealMatrix createSparseMatrix(int[][] ii, int[][] jj, double[][] A, int colCnt, int rowCnt) {
-        RealMatrix sparseMatrix = new OpenMapRealMatrix(rowCnt, colCnt); // 희소 행렬 생성
-        
         for (int i = 0; i < ii.length; i++) {
             for (int j = 0; j < ii[i].length; j++) {
                 int row = ii[i][j];
                 int col = jj[i][j];
-                double value = A[j][i]; // 값 매핑
-                
-                sparseMatrix.setEntry(row, col, value); // 희소 행렬에 값 삽입
+                result[row][col] += A[i][j];
             }
         }
-        return sparseMatrix;
+        return result;
     }
 
-    public static void main(String[] args) {
-        // 예제 입력
-        int[][] ii = {
-            {1,2,3,4,5,6,7,8,9,1,2,3,4,5,6,7,8,9},
-            {2,3,4,5,6,7,8,9,10,2,3,4,5,6,7,8,9,10},
-            {3,4,5,6,7,8,9,10,11,3,4,5,6,7,8,9,10,11},
-            {4,5,6,7,8,9,10,11,12,4,5,6,7,8,9,10,11,12}
-        };
+    // CSR -> CSC 변환 방식
+    public static double[][] sparseCSC(int[][] ii, int[][] jj, double[][] A, int colCnt, int rowCnt) {
+        double[][] result = new double[rowCnt][colCnt]; // 행과 열을 반대로 저장
 
-        int[][] jj = {
-            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},
-            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},
-            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18},
-            {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18}
-        };
-
-        double[][] A = {
-            {1, 11, 111, 1111},
-            {2, 22, 222, 2222},
-            {3, 33, 333, 3333},
-            {4, 44, 444, 4444},
-            {5, 55, 555, 5555},
-            {6, 66, 666, 6666}
-        };
-
-        int colCnt = 36;
-        int rowCnt = 12;
-
-        // 희소 행렬 변환
-        RealMatrix sparseMatrix = createSparseMatrix(ii, jj, A, colCnt, rowCnt);
-
-        // 출력
-        System.out.println("Sparse Matrix:");
-        for (int i = 0; i < rowCnt; i++) {
-            for (int j = 0; j < colCnt; j++) {
-                System.out.printf("%.0f ", sparseMatrix.getEntry(i, j));
+        for (int i = 0; i < ii.length; i++) {
+            for (int j = 0; j < ii[i].length; j++) {
+                int col = ii[i][j];  // CSR에서 row였던 것을 col로 변경
+                int row = jj[i][j];  // CSR에서 col이었던 것을 row로 변경
+                result[row][col] += A[i][j];
             }
-            System.out.println();
         }
+        return result;
     }
 }
