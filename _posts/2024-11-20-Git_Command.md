@@ -19,7 +19,7 @@ public class SparseMatrix {
             for (int j = 0; j < ii[i].length; j++) {
                 int row = ii[i][j];
                 int col = jj[i][j];
-                result[row][col] += A[i][j];
+                result[row][col] += A[j][i]; // A의 크기가 (36x4)이므로 인덱스 반전
             }
         }
         return result;
@@ -33,7 +33,7 @@ public class SparseMatrix {
             for (int j = 0; j < ii[i].length; j++) {
                 int col = ii[i][j];  // CSR에서 row였던 것을 col로 변경
                 int row = jj[i][j];  // CSR에서 col이었던 것을 row로 변경
-                result[row][col] += A[i][j];
+                result[row][col] += A[j][i]; // A의 크기가 (36x4)이므로 인덱스 반전
             }
         }
         return result;
