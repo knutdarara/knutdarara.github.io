@@ -13,6 +13,39 @@ layout: post
    - 정보, 필요한 파일
 이 구성을 보면 **완전한 클라우드 네이티브 인프라**를 구축하려는 의도 같네요. 각 요소들이 잘 결합되어 있어 **확장성, 관리 용이성, 고가용성** 등을 모두 고려한 형태입니다. 각 요소의 역할과 어떻게 연결될 수 있는지 구체적으로 설명드리겠습니다.
 
+
+import java.util.*;
+
+public class TreeSetMatcher {
+    public static void main(String[] args) {
+        List<Integer> listA = Arrays.asList(10, 30, 40, 50, 60);
+        List<Integer> listB = Arrays.asList(15, 25, 35, 45, 55, 65);
+
+        List<int[]> matchedPairs = matchClosest(listA, listB);
+
+        for (int[] pair : matchedPairs) {
+            System.out.println(pair[0] + " <-> " + pair[1]);
+        }
+    }
+
+    public static List<int[]> matchClosest(List<Integer> listA, List<Integer> listB) {
+        TreeSet<Integer> bSet = new TreeSet<>(listB);
+        List<int[]> result = new ArrayList<>();
+
+        for (int a : listA) {
+            Integer candidate = bSet.ceiling(a); // a 이상 중 가장 작은 값
+
+            if (candidate != null) {
+                result.add(new int[]{a, candidate});
+                bSet.remove(candidate); // 한번 매칭된 B는 제거
+            }
+            // 만약 매칭할 B가 없으면 생략
+        }
+
+        return result;
+    }
+}
+
 ### 1. **OS & Kernel 설정**
    - **OS**: Ubuntu 24.04는 최신 안정 버전으로, **Kubernetes** 및 다양한 클라우드 네이티브 도구와 호환이 좋습니다.
    - **Kernel**: `6.8.0-55-generic` 커널 버전은 최신 리눅스 커널로, **Cilium**과 같은 최신 네트워크 솔루션을 지원합니다. Kubernetes와 함께 잘 동작합니다.
