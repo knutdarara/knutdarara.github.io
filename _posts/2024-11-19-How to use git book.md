@@ -13,36 +13,16 @@ layout: post
    - 정보, 필요한 파일
 이 구성을 보면 **완전한 클라우드 네이티브 인프라**를 구축하려는 의도 같네요. 각 요소들이 잘 결합되어 있어 **확장성, 관리 용이성, 고가용성** 등을 모두 고려한 형태입니다. 각 요소의 역할과 어떻게 연결될 수 있는지 구체적으로 설명드리겠습니다.
 
-
 import java.util.*;
 
-public class TreeSetMatcher {
+public class ZigZagFilter {
     public static void main(String[] args) {
-        List<Integer> listA = Arrays.asList(10, 30, 40, 50, 60);
-        List<Integer> listB = Arrays.asList(15, 25, 35, 45, 55, 65);
+        List<Integer> list1 = Arrays.asList(1111, 2222, 3333, 4444);
+        List<Integer> list2 = Arrays.asList(2000, 4000, 5000);
 
-        List<int[]> matchedPairs = matchClosest(listA, listB);
+        List<Integer> filtered = list1.subList(0, Math.min(list1.size(), list2.size()));
 
-        for (int[] pair : matchedPairs) {
-            System.out.println(pair[0] + " <-> " + pair[1]);
-        }
-    }
-
-    public static List<int[]> matchClosest(List<Integer> listA, List<Integer> listB) {
-        TreeSet<Integer> bSet = new TreeSet<>(listB);
-        List<int[]> result = new ArrayList<>();
-
-        for (int a : listA) {
-            Integer candidate = bSet.ceiling(a); // a 이상 중 가장 작은 값
-
-            if (candidate != null) {
-                result.add(new int[]{a, candidate});
-                bSet.remove(candidate); // 한번 매칭된 B는 제거
-            }
-            // 만약 매칭할 B가 없으면 생략
-        }
-
-        return result;
+        filtered.forEach(System.out::println);
     }
 }
 
