@@ -11,20 +11,22 @@ layout: post
 2. git action
 3. 테마 설정
    - 정보, 필요한 파일
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+nodeRegistration:
+  criSocket: /run/containerd/containerd.sock
+  kubeletExtraArgs:
+    cgroup-driver: "cgroupfs"
+
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+kubernetesVersion: "v1.33.0"
+networking:
+  podSubnet: "10.244.0.0/16"
+
+
 이 구성을 보면 **완전한 클라우드 네이티브 인프라**를 구축하려는 의도 같네요. 각 요소들이 잘 결합되어 있어 **확장성, 관리 용이성, 고가용성** 등을 모두 고려한 형태입니다. 각 요소의 역할과 어떻게 연결될 수 있는지 구체적으로 설명드리겠습니다.
-
-import java.util.*;
-
-public class ZigZagFilter {
-    public static void main(String[] args) {
-        List<Integer> list1 = Arrays.asList(1111, 2222, 3333, 4444);
-        List<Integer> list2 = Arrays.asList(2000, 4000, 5000);
-
-        List<Integer> filtered = list1.subList(0, Math.min(list1.size(), list2.size()));
-
-        filtered.forEach(System.out::println);
-    }
-}
 
 ### 1. **OS & Kernel 설정**
    - **OS**: Ubuntu 24.04는 최신 안정 버전으로, **Kubernetes** 및 다양한 클라우드 네이티브 도구와 호환이 좋습니다.
