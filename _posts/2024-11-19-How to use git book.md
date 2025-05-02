@@ -26,6 +26,27 @@ networking:
   podSubnet: "10.244.0.0/16"
 
 
+---------
+
+version = 2
+
+[plugins]
+  [plugins."io.containerd.grpc.v1.cri"]
+    sandbox_image = "registry.k8s.io/pause:3.9"
+
+    [plugins."io.containerd.grpc.v1.cri".containerd]
+      snapshotter = "overlayfs"
+      default_runtime_name = "runc"
+
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes]
+
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc]
+          runtime_type = "io.containerd.runc.v2"
+
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+            SystemdCgroup = false
+
+
 이 구성을 보면 **완전한 클라우드 네이티브 인프라**를 구축하려는 의도 같네요. 각 요소들이 잘 결합되어 있어 **확장성, 관리 용이성, 고가용성** 등을 모두 고려한 형태입니다. 각 요소의 역할과 어떻게 연결될 수 있는지 구체적으로 설명드리겠습니다.
 
 ### 1. **OS & Kernel 설정**
