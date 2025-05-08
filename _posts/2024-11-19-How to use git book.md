@@ -17,7 +17,21 @@ nodeRegistration:
   criSocket: /run/containerd/containerd.sock
   kubeletExtraArgs:
     cgroup-driver: "cgroupfs"
+------------------
+sudo ctr image pull docker.io/cilium/cilium:v1.17.3
+sudo ctr image pull docker.io/cilium/operator-generic:v1.17.3
+sudo ctr image pull registry.k8s.io/pause:3.9=
 
+sudo ctr image export cilium.tar docker.io/cilium/cilium:v1.17.3
+sudo ctr image export operator.tar docker.io/cilium/operator-generic:v1.17.3
+sudo ctr image export pause.tar registry.k8s.io/pause:3.9(
+
+helm repo add cilium https://helm.cilium.io
+helm pull cilium/cilium --version 1.17.3 --untar
+tar czvf cilium-1.17.3.tgz cilium/
+
+  
+-------------------
 ---
 apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
