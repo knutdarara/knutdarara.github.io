@@ -27,7 +27,19 @@ networking:
 
 
 ---------
+# CLI 버전 수동 지정
+CLI_VERSION=v0.15.19
 
+# 다운로드
+curl -LO https://github.com/cilium/cilium-cli/releases/download/${CLI_VERSION}/cilium-linux-amd64.tar.gz
+curl -LO https://github.com/cilium/cilium-cli/releases/download/${CLI_VERSION}/cilium-linux-amd64.tar.gz.sha256sum
+
+# 검증
+sha256sum --check cilium-linux-amd64.tar.gz.sha256sum
+
+# 설치
+sudo tar xzvf cilium-linux-amd64.tar.gz -C /usr/local/bin
+---------
 version = 2
 
 [plugins]
