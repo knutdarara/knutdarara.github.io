@@ -18,6 +18,16 @@ nodeRegistration:
   kubeletExtraArgs:
     cgroup-driver: "cgroupfs"
 ------------------
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://download.opensuse.org/repositories/isv:/kubernetes:/core:/stable:/v1.33:/build/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://download.opensuse.org/repositories/isv:/kubernetes:/core:/stable:/v1.33:/build/rpm/repodata/repomd.xml.key
+EOF
+
+--------
 sudo ctr image pull docker.io/cilium/cilium:v1.17.3
 sudo ctr image pull docker.io/cilium/operator-generic:v1.17.3
 sudo ctr image pull registry.k8s.io/pause:3.9=
