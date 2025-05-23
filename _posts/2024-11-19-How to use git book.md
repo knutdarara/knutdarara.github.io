@@ -14,22 +14,27 @@ layout: post
 
 #!/bin/bash
 
-# Step 1: cilium install --dry-run 으로 YAML 추출
+#!/bin/bash
+
+# Step 1: 설치 YAML 생성
 cilium install --version 1.15.3 --dry-run > cilium-install.yaml
 
-# Step 2: image 목록 추출하여 배열로 저장
-IMAGES=($(grep "image:" cilium-install.yaml | grep -v "pullPolicy" | awk '{print $2}' | sort -u))
+# Step 2: 이미지 경로만 추출 (digest 제거 포함)
+IMAGES=($(grep "image:" cilium-install.yaml \
+  | grep -v "pullPolicy" \
+  | awk '{print $2}' \
+  | sed 's/@sha256.*//g' \
+  | sort -u))
 
-# Step 3: pull
+# Step 3: Pull
 for img in "${IMAGES[@]}"; do
   echo "[+] Pulling: $img"
   ctr -n=k8s.io image pull "$img"
 done
 
-# Step 4: export
+# Step 4: Export
 echo "[*] Exporting to cilium-1.15.3-images.tar"
 ctr -n=k8s.io images export cilium-1.15.3-images.tar "${IMAGES[@]}"
-
 
 
 
