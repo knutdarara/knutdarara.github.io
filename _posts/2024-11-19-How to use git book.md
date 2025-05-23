@@ -11,6 +11,27 @@ layout: post
 2. git action
 3. 테마 설정
    - 정보, 필요한 파일
+#!/bin/bash
+
+# 이미지 목록 정의
+IMAGES=(
+  "registry.k8s.io/kube-apiserver:v1.33.1"
+  "registry.k8s.io/kube-controller-manager:v1.33.1"
+  "registry.k8s.io/kube-scheduler:v1.33.1"
+  "registry.k8s.io/kube-proxy:v1.33.1"
+  "registry.k8s.io/pause:3.10"
+  "registry.k8s.io/etcd:3.5.9-0"
+  "registry.k8s.io/coredns/coredns:v1.11.1"
+)
+
+# 다운로드 후 이미지 export
+for img in "${IMAGES[@]}"; do
+  ctr -n=k8s.io image pull "$img"
+done
+
+# 전체 이미지 하나로 export
+ctr -n=k8s.io images export k8s-1.33.1-images.tar "${IMAGES[@]}"
+
 
 [kubernetes]
 name=Kubernetes
