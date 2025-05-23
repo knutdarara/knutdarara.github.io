@@ -13,24 +13,21 @@ layout: post
    - 정보, 필요한 파일
 #!/bin/bash
 
-# 이미지 목록 정의
-IMAGES=(
-  "registry.k8s.io/kube-apiserver:v1.33.1"
-  "registry.k8s.io/kube-controller-manager:v1.33.1"
-  "registry.k8s.io/kube-scheduler:v1.33.1"
-  "registry.k8s.io/kube-proxy:v1.33.1"
-  "registry.k8s.io/pause:3.10"
-  "registry.k8s.io/etcd:3.5.9-0"
-  "registry.k8s.io/coredns/coredns:v1.11.1"
-)
+K8S_VERSION="1.33.1"
+EXPORT_FILE="k8s-${K8S_VERSION}-images.tar"
 
-# 다운로드 후 이미지 export
-for img in "${IMAGES[@]}"; do
+# kubeadm으로 이미지 목록 추출
+IMAGES=$(kubeadm config images list --kubernetes-version="${K8S_VERSION}")
+
+# 이미지들 containerd로 pull
+for img in $IMAGES; do
+  echo "[+] pulling: $img"
   ctr -n=k8s.io image pull "$img"
 done
 
-# 전체 이미지 하나로 export
-ctr -n=k8s.io images export k8s-1.33.1-images.tar "${IMAGES[@]}"
+# 이미지 export
+echo "[*] exporting images to $EXPORT_FILE"
+ctr -n=k8s.io images export "$EXPORT_FILE" $IMAGES
 
 
 [kubernetes]
