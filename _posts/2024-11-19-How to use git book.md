@@ -5,6 +5,19 @@ date: 2024-11-19
 categories: ["git","git page"]
 layout: post
 ---
+# VPN 클라이언트에서 내부망 접근 허용
+iptables -A FORWARD -i tun0 -o bond0 -j ACCEPT
+iptables -A FORWARD -i bond0 -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# VPN 클라이언트에서 외부망 접근 허용
+iptables -A FORWARD -i tun0 -o bond1 -j ACCEPT
+iptables -A FORWARD -i bond1 -o tun0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+
+# NAT 설정
+iptables -t nat -A POSTROUTING -s 10.101.2.0/24 -o bond0 -j MASQUERADE
+iptables -t nat -A POSTROUTING -s 10.101.2.0/24 -o bond1 -j MASQUERADE
+
+
 # 처음 셋업을 위해서 필요한 정보 정리.
 1. 현재 환경
    - 환경 셋업 방법 정리
